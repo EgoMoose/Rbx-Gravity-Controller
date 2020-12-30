@@ -1,22 +1,27 @@
 local Maid = require(script.Parent.Utility.Maid)
 
+-- CONSTANTS
+
+local CUSTOM_PHYSICAL = PhysicalProperties.new (0.7, 0, 0, 1, 100)
+
 -- Class
 
 local ColliderClass = {}
-ColliderClass.__index = Collider
+ColliderClass.__index = ColliderClass
 ColliderClass.ClassName = "Collider"
 
 -- Public Constructors
 
 function ColliderClass.new(controller)
 	local self = setmetatable({}, ColliderClass)
-	local sphere, vForce, floor = create(controller)
+	local sphere, vForce, floor, gryo = create(controller)
 
 	self._maid = Maid.new()
 	
 	self.Sphere = sphere
 	self.VForce = vForce
 	self.FloorDetector = floor
+	self.Gyro = gryo
 
 	init(self)
 
@@ -45,18 +50,21 @@ function create(controller)
 
 	local sphere = Instance.new("Part")
 	sphere.Name = "Sphere"
+	sphere.Massless = true
 	sphere.Size = Vector3.new(2, 2, 2)
 	sphere.Shape = Enum.PartType.Ball
-	sphere.Transparency = 1
+	sphere.Transparency = 0
+	sphere.CustomPhysicalProperties = CUSTOM_PHYSICAL
 
 	local floor = Instance.new("Part")
 	floor.Name = "FloorDectector"
 	floor.CanCollide = false
+	floor.Massless = true
 	floor.Size = Vector3.new(2, 1, 1)
 	floor.Transparency = 1
 
 	local weld = Instance.new("Weld")
-	weld.C0 = CFrame.new(0, -hipHeight, 0)
+	weld.C0 = CFrame.new(0, -hipHeight, 0.1)
 	weld.Part0 = controller.HRP
 	weld.Part1 = sphere
 	weld.Parent = sphere
@@ -69,9 +77,16 @@ function create(controller)
 
 	local vForce = Instance.new("VectorForce")
 	vForce.Force = Vector3.new(0, 0, 0)
+	vForce.ApplyAtCenterOfMass = true
 	vForce.RelativeTo = Enum.ActuatorRelativeTo.World
 	vForce.Attachment0 = attach
 	vForce.Parent = controller.HRP
+
+	local gyro = Instance.new("BodyGyro")
+	gyro.P = 25000
+	gyro.MaxTorque = Vector3.new(100000, 100000, 100000)
+	gyro.CFrame = controller.HRP.CFrame
+	gyro.Parent = controller.HRP
 
 	sphere.Touched:Connect(function() end)
 	floor.Touched:Connect(function() end)
@@ -79,16 +94,22 @@ function create(controller)
 	sphere.Parent = controller.Character
 	floor.Parent = controller.Character
 
-	return sphere, vForce, floor
+	return sphere, vForce, floor, gyro
 end
 
 function init(self)
 	self._maid:Mark(self.Sphere)
 	self._maid:Mark(self.VForce)
 	self._maid:Mark(self.FloorDetector)
+	self._maid:Mark(self.Gyro)
 end
 
 -- Public Methods
+
+function ColliderClass:Update(force, cframe)
+	self.VForce.Force = force
+	self.Gyro.CFrame = cframe
+end
 
 function ColliderClass:Destroy()
 	self._maid:Sweep()

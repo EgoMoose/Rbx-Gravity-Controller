@@ -13,8 +13,6 @@ function CameraClass.new(controller)
 	local playerModule = require(player.PlayerScripts:WaitForChild("PlayerModule"))
 
 	self.Controller = controller
-
-	self.UpVector = Vector3.new(0, 1, 0)
 	self.CameraModule = playerModule:GetCameras()
 
 	init(self)
@@ -25,20 +23,15 @@ end
 -- Private methods
 
 function init(self)
-	self.CameraModule:SetTransitionRate(0.15)
+	self.CameraModule:SetTransitionRate(1)
 	function self.CameraModule.GetUpVector(this, upVector)
-		return self.UpVector
+		return self.Controller._gravityUp
 	end
 end
 
 -- Public Methods
 
-function CameraClass:SetUpVector(normal)
-	self.UpVector = normal
-end
-
 function CameraClass:Destroy()
-	self.UpVector = Vector3.new(0, 1, 0)
 	function self.CameraModule.GetUpVector(this, upVector)
 		return Vector3.new(0, 1, 0)
 	end
