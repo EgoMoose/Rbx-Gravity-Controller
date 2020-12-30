@@ -6,12 +6,9 @@
 			"$className": "ServerScriptService",
 			"$path": "src/ServerScriptService"
 		},
-		"StarterPlayer": {
-			"$className": "StarterPlayer",
-			"StarterPlayerScripts": {
-				"$className": "StarterPlayerScripts",
-				"$path": "src/StarterPlayerScripts"
-			}
+		"StarterPack": {
+			"$className": "StarterPack",
+			"$path": "src/StarterPack"
 		}
 	}
 }
