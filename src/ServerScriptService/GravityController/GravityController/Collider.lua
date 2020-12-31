@@ -20,7 +20,10 @@ ColliderClass.ClassName = "Collider"
 
 function ColliderClass.new(controller)
 	local self = setmetatable({}, ColliderClass)
-	local sphere, vForce, floor, gryo = create(controller)
+
+	self.Model = Instance.new("Model")
+
+	local sphere, vForce, floor, gryo = create(self, controller)
 
 	self._maid = Maid.new()
 	
@@ -52,7 +55,7 @@ local function getAttachement(controller)
 	return controller.HRP:WaitForChild("RootAttachment")
 end
 
-function create(controller)
+function create(self, controller)
 	local hipHeight = getHipHeight(controller)
 	local attach = getAttachement(controller)
 
@@ -63,6 +66,14 @@ function create(controller)
 	sphere.Shape = Enum.PartType.Ball
 	sphere.Transparency = 1
 	sphere.CustomPhysicalProperties = CUSTOM_PHYSICAL
+
+	local sphere2 = Instance.new("Part")
+	sphere2.Name = "Sphere2"
+	sphere2.CanCollide = false
+	sphere2.Massless = true
+	sphere2.Size = Vector3.new(2.5, 2.5, 2.5)
+	sphere2.Shape = Enum.PartType.Ball
+	sphere2.Transparency = 1
 
 	local floor = Instance.new("Part")
 	floor.Name = "FloorDectector"
@@ -76,6 +87,12 @@ function create(controller)
 	weld.Part0 = controller.HRP
 	weld.Part1 = sphere
 	weld.Parent = sphere
+
+	local weld = Instance.new("Weld")
+	weld.C0 = CFrame.new(0, -hipHeight, 0.1)
+	weld.Part0 = controller.HRP
+	weld.Part1 = sphere2
+	weld.Parent = sphere2
 
 	local weld = Instance.new("Weld")
 	weld.C0 = CFrame.new(0, -hipHeight - 1.5, 0)
@@ -96,20 +113,23 @@ function create(controller)
 	gyro.CFrame = controller.HRP.CFrame
 	gyro.Parent = controller.HRP
 
-	sphere.Touched:Connect(function() end)
+	sphere2.Touched:Connect(function() end)
 	floor.Touched:Connect(function() end)
 
-	sphere.Parent = controller.Character
-	floor.Parent = controller.Character
+	sphere.Parent = self.Model
+	sphere2.Parent = self.Model
+	floor.Parent = self.Model
 
-	return sphere, vForce, floor, gyro
+	return sphere2, vForce, floor, gyro
 end
 
 function init(self)
-	self._maid:Mark(self.Sphere)
+	self._maid:Mark(self.Model)
 	self._maid:Mark(self.VForce)
 	self._maid:Mark(self.FloorDetector)
 	self._maid:Mark(self.Gyro)
+	self.Model.Name = "Collider"
+	self.Model.Parent = self.Controller.Character
 end
 
 -- Public Methods
@@ -140,7 +160,8 @@ function ColliderClass:IsGrounded(isJumpCheck)
 			params.FilterDescendantsInstances = filter
 
 			local gravityUp = self.Controller._gravityUp
-			local result = workspace:Raycast(self.Sphere.Position, -2.1*gravityUp, params)
+			local result = workspace:Raycast(self.Sphere.Position, -10*gravityUp, params)
+
 			if result then
 				local max = math.cos(math.rad(self.Controller.Humanoid.MaxSlopeAngle))
 				local dot = result.Normal:Dot(gravityUp)
