@@ -42,6 +42,7 @@ function GravityControllerClass.new(player)
 	self._control = Control.new(self)
 	self._collider = Collider.new(self)
 
+	self._fallStart = self.HRP.Position.y
 	self._prevPart = workspace.Terrain
 	self._prevCFrame = CFrame.new()
 
@@ -179,11 +180,17 @@ function init(self)
 		end
 	end))
 
+	self.Maid:Mark(self.StateTracker.Changed:Connect(function(state, speed)
+		if state == Enum.HumanoidStateType.Freefall then
+			self._fallStart = self.HRP.Position:Dot(self._gravityUp)
+		end
+	end))
+
 	self.Maid:Mark(RunService.Heartbeat:Connect(function(dt)
 		onHeartbeat(self, dt)
 	end))
 
-	RunService:BindToRenderStep("GravityStep", Enum.RenderPriority.Camera.Value + 1, function(dt)
+	RunService:BindToRenderStep("GravityStep", Enum.RenderPriority.Camera.Value - 1, function(dt)
 		onGravityStep(self, dt)
 	end)
 
@@ -192,6 +199,19 @@ function init(self)
 end
 
 -- Public Methods
+
+function GravityControllerClass:ResetGravity(gravity)
+	self._gravityUp = gravity
+	self._fallStart = self.HRP.Position:Dot(gravity)
+end
+
+function GravityControllerClass:GetFallHeight()
+	if self.StateTracker.State == Enum.HumanoidStateType.Freefall then
+		local height = self.HRP.Position:Dot(self._gravityUp)
+		return height - self._fallStart
+	end
+	return 0
+end
 
 function GravityControllerClass:GetGravityUp(oldGravity)
 	return oldGravity

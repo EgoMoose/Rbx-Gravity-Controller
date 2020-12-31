@@ -23,7 +23,7 @@ end
 -- Private methods
 
 function init(self)
-	self.CameraModule:SetTransitionRate(1)
+	--self.CameraModule:SetTransitionRate(1)
 	function self.CameraModule.GetUpVector(this, upVector)
 		return self.Controller._gravityUp
 	end
