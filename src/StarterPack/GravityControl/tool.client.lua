@@ -12,7 +12,7 @@ local gravityController = nil
 
 local function getGravityUp(self, oldGravity)
 	local result = workspace:Raycast(self.HRP.Position, -5*oldGravity, params)
-	if result then
+	if result and result.Instance.CanCollide and not result.Instance.Parent:FindFirstChild("Humanoid") then
 		return result.Normal
 	end
 	return oldGravity
