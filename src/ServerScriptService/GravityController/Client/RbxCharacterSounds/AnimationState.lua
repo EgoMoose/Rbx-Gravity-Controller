@@ -12,12 +12,21 @@ local STATE_MAP = {
 return function(animator, callback)
 	local humanoid = animator.Parent
 	local prevState = humanoid:GetState()
+	local isR15 = humanoid.RigType == Enum.HumanoidRigType.R15
 
 	return animator.AnimationPlayed:Connect(function(track)
-		local container = track.Animation and track.Animation.Parent
-		if container then
-			local state = STATE_MAP[container.Name]
-			if state and container.Parent and container.Parent.Name == "Animate" then
+		if isR15 then
+			local container = track.Animation and track.Animation.Parent
+			if container then
+				local state = STATE_MAP[container.Name]
+				if state and container.Parent and container.Parent.Name == "Animate" then
+					callback(prevState, state)
+					prevState = state
+				end
+			end
+		else
+			local state = STATE_MAP[track.Name]
+			if state then
 				callback(prevState, state)
 				prevState = state
 			end
