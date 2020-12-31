@@ -36,7 +36,6 @@ function StateTrackerClass.new(controller)
 	self.Jumped = false
 	self.JumpTick = os.clock()
 
-	self.SoundState = controller.Player.PlayerScripts:WaitForChild("RbxCharacterSounds"):WaitForChild("SetState")
 	self.Animation = require(controller.Character:WaitForChild("Animate"):WaitForChild("Controller"))
 	self.Changed = Signal.new()
 
@@ -94,7 +93,6 @@ function StateTrackerClass:Update(gravityUp, isGrounded, isInputMoving)
 	if oldState ~= newState or (SPEED[newState] and math.abs(newSpeed - oldSpeed) > 0.1) then
 		self.State = newState
 		self.Speed = newSpeed
-		self.SoundState:Fire(newState)
 		self.Changed:Fire(newState, newSpeed)
 	end
 end

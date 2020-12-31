@@ -1,9 +1,9 @@
 -- Roblox character sound script
 
-local SetState = script:WaitForChild("SetState")
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+
+local AnimationState = require(script:WaitForChild("AnimationState"))
 
 local SOUND_DATA = {
 	Climbing = {
@@ -69,11 +69,6 @@ end
 local function playSound(sound)
 	sound.TimePosition = 0
 	sound.Playing = true
-end
-
-local function stopSound(sound)
-	sound.Playing = false
-	sound.TimePosition = 0
 end
 
 local function shallowCopy(t)
@@ -211,23 +206,9 @@ local function initializeSoundSystem(player, humanoid, rootPart)
 	}
 
 	local activeState = stateRemap[humanoid:GetState()] or humanoid:GetState()
-	local activeConnections = {}
+	local animator = humanoid:WaitForChild("Animator")
 
-	local stateChangedConn = humanoid.StateChanged:Connect(function(_, state)
-		state = stateRemap[state] or state
-
-		if state ~= activeState then
-			local transitionFunc = stateTransitions[state]
-
-			if transitionFunc then
-				transitionFunc()
-			end
-
-			activeState = state
-		end
-	end)
-	
-	local customStateChangedConn = SetState.Event:Connect(function(state)
+	local stateChangedConn = AnimationState(animator, function(_, state)
 		state = stateRemap[state] or state
 
 		if state ~= activeState then
@@ -258,7 +239,6 @@ local function initializeSoundSystem(player, humanoid, rootPart)
 
 	local function terminate()
 		stateChangedConn:Disconnect()
-		customStateChangedConn:Disconnect()
 		steppedConn:Disconnect()
 		humanoidAncestryChangedConn:Disconnect()
 		rootPartAncestryChangedConn:Disconnect()
