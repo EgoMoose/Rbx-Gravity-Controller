@@ -4,14 +4,17 @@ local Utility = script:WaitForChild("Utility")
 local CharacterModules = script:WaitForChild("CharacterModules")
 
 local Maid = require(Utility:WaitForChild("Maid"))
+local Signal = require(Utility:WaitForChild("Signal"))
 local Camera = require(CharacterModules:WaitForChild("Camera"))
 local Control = require(CharacterModules:WaitForChild("Control"))
 local Collider = require(script:WaitForChild("Collider"))
+local StateTracker = require(script:WaitForChild("StateTracker"))
 
 -- CONSTANTS
 
 local TRANSITION = 0.15
 local WALK_FORCE = 200 / 3
+local JUMP_MODIFIER = 1.2
 
 local ZERO3 = Vector3.new(0, 0, 0)
 local UNIT_Y = Vector3.new(0, 1, 0)
@@ -39,6 +42,7 @@ function GravityControllerClass.new(player)
 	self._control = Control.new(self)
 	self._collider = Collider.new(self)
 
+	self.StateTracker = StateTracker.new(self)
 	self.Maid = Maid.new()
 
 	init(self)
@@ -62,6 +66,14 @@ local function getModelMass(model)
 		end
 	end
 	return mass
+end
+
+local function onJumpRequest(self)
+	if not self.StateTracker.Jumped and self._collider:IsGrounded(true) then
+		local vel = self.HRP.Velocity
+		self.HRP.Velocity = vel + self._gravityUp*self.Humanoid.JumpPower*JUMP_MODIFIER
+		self.StateTracker:RequestJump()
+	end
 end
 
 local function onGravityStep(self, dt)
@@ -130,6 +142,7 @@ local function onGravityStep(self, dt)
 
 	local charRotation = newCharRotation * newCharCF
 
+	self.StateTracker:Update(self._gravityUp, self._collider:IsGrounded(false), isInputMoving)
 	self._collider:Update(walkForce + gForce, charRotation)
 end
 
@@ -144,6 +157,12 @@ function init(self)
 	end))
 
 	self.Humanoid.PlatformStand = true
+	self.Maid:Mark(self.Humanoid:GetPropertyChangedSignal("Jump"):Connect(function()
+		if self.Humanoid.Jump then
+			onJumpRequest(self)
+			self.Humanoid.Jump = false
+		end
+	end))
 
 	RunService:BindToRenderStep("GravityStep", Enum.RenderPriority.Camera.Value + 1, function(dt)
 		onGravityStep(self, dt)
