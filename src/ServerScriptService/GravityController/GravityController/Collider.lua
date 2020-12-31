@@ -3,6 +3,9 @@ local Maid = require(script.Parent.Utility.Maid)
 local params = RaycastParams.new()
 params.FilterType = Enum.RaycastFilterType.Whitelist
 
+local params2 = RaycastParams.new()
+params2.FilterType = Enum.RaycastFilterType.Blacklist
+
 -- CONSTANTS
 
 local CUSTOM_PHYSICAL = PhysicalProperties.new (0.7, 0, 0, 1, 100)
@@ -147,6 +150,15 @@ function ColliderClass:IsGrounded(isJumpCheck)
 			end
 		end
 	end
+end
+
+function ColliderClass:GetStandingPart()
+	params2.FilterDescendantsInstances = {self.Controller.Character}
+
+	local gravityUp = self.Controller._gravityUp
+	local result = workspace:Raycast(self.Sphere.Position, -1.1*gravityUp, params2)
+
+	return result and result.Instance
 end
 
 function ColliderClass:Destroy()

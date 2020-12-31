@@ -42,6 +42,9 @@ function GravityControllerClass.new(player)
 	self._control = Control.new(self)
 	self._collider = Collider.new(self)
 
+	self._prevPart = workspace.Terrain
+	self._prevCFrame = CFrame.new()
+
 	self.StateTracker = StateTracker.new(self)
 	self.Maid = Maid.new()
 
@@ -74,6 +77,18 @@ local function onJumpRequest(self)
 		self.HRP.Velocity = vel + self._gravityUp*self.Humanoid.JumpPower*JUMP_MODIFIER
 		self.StateTracker:RequestJump()
 	end
+end
+
+local function onHeartbeat(self, dt)
+	local standingPart = self._collider:GetStandingPart()
+	
+	if standingPart and self._prevPart and self._prevPart == standingPart then
+		local offset = self._prevCFrame:ToObjectSpace(self.HRP.CFrame)
+		self.HRP.CFrame = standingPart.CFrame * offset
+	end
+
+	self._prevPart = standingPart
+	self._prevCFrame = standingPart and standingPart.CFrame
 end
 
 local function onGravityStep(self, dt)
@@ -162,6 +177,10 @@ function init(self)
 			onJumpRequest(self)
 			self.Humanoid.Jump = false
 		end
+	end))
+
+	self.Maid:Mark(RunService.Heartbeat:Connect(function(dt)
+		onHeartbeat(self, dt)
 	end))
 
 	RunService:BindToRenderStep("GravityStep", Enum.RenderPriority.Camera.Value + 1, function(dt)
