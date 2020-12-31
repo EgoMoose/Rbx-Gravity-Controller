@@ -208,7 +208,7 @@ local function initializeSoundSystem(player, humanoid, rootPart)
 	local activeState = stateRemap[humanoid:GetState()] or humanoid:GetState()
 	local animator = humanoid:WaitForChild("Animator")
 
-	local stateChangedConn = AnimationState(animator, function(_, state)
+	local function onStateChange(_, state)
 		state = stateRemap[state] or state
 
 		if state ~= activeState then
@@ -219,6 +219,13 @@ local function initializeSoundSystem(player, humanoid, rootPart)
 			end
 
 			activeState = state
+		end
+	end
+
+	local stateChangedConn = humanoid.StateChanged:Connect(onStateChange)
+	local animStateChangedConn = AnimationState(animator, function(_, state)
+		if humanoid.PlatformStand then
+			onStateChange(_, state)
 		end
 	end)
 
@@ -239,6 +246,7 @@ local function initializeSoundSystem(player, humanoid, rootPart)
 
 	local function terminate()
 		stateChangedConn:Disconnect()
+		animStateChangedConn:Disconnect()
 		steppedConn:Disconnect()
 		humanoidAncestryChangedConn:Disconnect()
 		rootPartAncestryChangedConn:Disconnect()
