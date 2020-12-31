@@ -186,6 +186,9 @@ function init(self)
 	RunService:BindToRenderStep("GravityStep", Enum.RenderPriority.Camera.Value + 1, function(dt)
 		onGravityStep(self, dt)
 	end)
+
+	self.Humanoid.StateChanged:Wait()
+	self.StateTracker.Changed:Fire(self.StateTracker.State, 0)
 end
 
 -- Public Methods
