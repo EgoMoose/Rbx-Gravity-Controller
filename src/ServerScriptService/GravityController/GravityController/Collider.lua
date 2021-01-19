@@ -142,7 +142,7 @@ end
 function ColliderClass:IsGrounded(isJumpCheck)
 	local parts = (isJumpCheck and self.JumpDetector or self.FloorDetector):GetTouchingParts()
 	for _, part in pairs(parts) do
-		if not part:IsDescendantOf(self.Controller.Character) then
+		if not part:IsDescendantOf(self.Controller.Character) and part.CanCollide then
 			return true
 		end
 	end
