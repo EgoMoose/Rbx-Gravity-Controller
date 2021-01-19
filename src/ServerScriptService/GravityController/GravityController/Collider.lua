@@ -26,7 +26,8 @@ function ColliderClass.new(controller)
 	local sphere, vForce, floor, floor2, gryo = create(self, controller)
 
 	self._maid = Maid.new()
-	
+	self._floorTouchingParts = {}
+
 	self.Controller = controller
 
 	self.Sphere = sphere
@@ -113,9 +114,6 @@ function create(self, controller)
 	gyro.CFrame = controller.HRP.CFrame
 	gyro.Parent = controller.HRP
 
-	floor.Touched:Connect(function() end)
-	floor2.Touched:Connect(function() end)
-
 	sphere.Parent = self.Model
 	floor.Parent = self.Model
 	floor2.Parent = self.Model
@@ -128,6 +126,26 @@ function init(self)
 	self._maid:Mark(self.VForce)
 	self._maid:Mark(self.FloorDetector)
 	self._maid:Mark(self.Gyro)
+
+	self._maid:Mark(self.FloorDetector.Touched:Connect(function(otherPart)
+		table.insert(self._floorTouchingParts, otherPart)
+	end))
+	self._maid:Mark(self.FloorDetector.TouchEnded:Connect(function(otherPart)
+		spawn(function()
+			wait(0.1)	-- slight delay before removing from cache
+			if not self._floorTouchingParts then
+				return;
+			end
+			for index, value in pairs(self._floorTouchingParts) do
+				if value == otherPart then
+					table.remove(self._floorTouchingParts, index)
+					return;
+				end
+			end
+		end)
+	end))
+	self._maid:Mark(self.JumpDetector.Touched:Connect(function() end))
+
 	self.Model.Name = "Collider"
 	self.Model.Parent = self.Controller.Character
 end
@@ -140,7 +158,7 @@ function ColliderClass:Update(force, cframe)
 end
 
 function ColliderClass:IsGrounded(isJumpCheck)
-	local parts = (isJumpCheck and self.JumpDetector or self.FloorDetector):GetTouchingParts()
+	local parts = isJumpCheck and self.JumpDetector:GetTouchingParts() or self._floorTouchingParts
 	for _, part in pairs(parts) do
 		if not part:IsDescendantOf(self.Controller.Character) and part.CanCollide then
 			return true
