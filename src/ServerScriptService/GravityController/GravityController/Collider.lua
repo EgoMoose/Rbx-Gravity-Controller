@@ -27,6 +27,7 @@ function ColliderClass.new(controller)
 
 	self._maid = Maid.new()
 	self._floorTouchingParts = {}
+	self._jumpTouchingParts = {}
 
 	self.Controller = controller
 
@@ -122,26 +123,29 @@ function create(self, controller)
 end
 
 function init(self)
-	self._maid:Mark(self.FloorDetector.Touched:Connect(function(part)
-		if not part:IsDescendantOf(self.Controller.Character) and part.CanCollide then
-			table.insert(self._floorTouchingParts, part)
+	self._maid:Mark(self.FloorDetector.Touched:Connect(function(hit)
+		if not hit:IsDescendantOf(self.Controller.Character) and hit.CanCollide then
+			self._floorTouchingParts[hit] = true
 		end
 	end))
-	self._maid:Mark(self.FloorDetector.TouchEnded:Connect(function(part)
-		if not part:IsDescendantOf(self.Controller.Character) and part.CanCollide then
-			wait(0.01)	-- slight delay before removing from cache
-			if not self._floorTouchingParts then
-				return;
-			end
-			for index, value in pairs(self._floorTouchingParts) do
-				if value == part then
-					table.remove(self._floorTouchingParts, index)
-					return;
-				end
-			end
+
+	self._maid:Mark(self.FloorDetector.TouchEnded:Connect(function(hit)
+		if self._floorTouchingParts[hit] then
+			self._floorTouchingParts[hit] = nil
 		end
 	end))
-	self._maid:Mark(self.JumpDetector.Touched:Connect(function() end))
+
+	self._maid:Mark(self.JumpDetector.Touched:Connect(function(hit)
+		if not hit:IsDescendantOf(self.Controller.Character) and hit.CanCollide then
+			self._jumpTouchingParts[hit] = true
+		end
+	end))
+
+	self._maid:Mark(self.JumpDetector.TouchEnded:Connect(function(hit)
+		if self._jumpTouchingParts[hit] then
+			self._jumpTouchingParts[hit] = nil
+		end
+	end))
 
 	self._maid:Mark(self.Model)
 	self._maid:Mark(self.VForce)
@@ -161,16 +165,8 @@ function ColliderClass:Update(force, cframe)
 end
 
 function ColliderClass:IsGrounded(isJumpCheck)
-	if isJumpCheck then
-		local parts = self.JumpDetector:GetTouchingParts()
-		for _, part in pairs(parts) do
-			if not part:IsDescendantOf(self.Controller.Character) and part.CanCollide then
-				return true
-			end
-		end
-	else
-		return #self._floorTouchingParts > 0
-	end
+	-- using next on an empty dictionary will return nil
+	return not not next(isJumpCheck and self._jumpTouchingParts or self._floorTouchingParts)
 end
 
 function ColliderClass:GetStandingPart()
