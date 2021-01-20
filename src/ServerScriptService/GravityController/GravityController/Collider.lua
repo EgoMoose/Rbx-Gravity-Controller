@@ -129,18 +129,16 @@ function init(self)
 	end))
 	self._maid:Mark(self.FloorDetector.TouchEnded:Connect(function(part)
 		if not part:IsDescendantOf(self.Controller.Character) and part.CanCollide then
-			spawn(function()
-				wait(0.01)	-- slight delay before removing from cache
-				if not self._floorTouchingParts then
+			wait(0.01)	-- slight delay before removing from cache
+			if not self._floorTouchingParts then
+				return;
+			end
+			for index, value in pairs(self._floorTouchingParts) do
+				if value == part then
+					table.remove(self._floorTouchingParts, index)
 					return;
 				end
-				for index, value in pairs(self._floorTouchingParts) do
-					if value == part then
-						table.remove(self._floorTouchingParts, index)
-						return;
-					end
-				end 
-			end)
+			end
 		end
 	end))
 	self._maid:Mark(self.JumpDetector.Touched:Connect(function() end))
