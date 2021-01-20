@@ -26,9 +26,7 @@ function ColliderClass.new(controller)
 	local sphere, vForce, floor, floor2, gryo = create(self, controller)
 
 	self._maid = Maid.new()
-	self._floorTouchingParts = {}
-	self._jumpTouchingParts = {}
-
+	
 	self.Controller = controller
 
 	self.Sphere = sphere
@@ -115,6 +113,9 @@ function create(self, controller)
 	gyro.CFrame = controller.HRP.CFrame
 	gyro.Parent = controller.HRP
 
+	floor.Touched:Connect(function() end)
+	floor2.Touched:Connect(function() end)
+
 	sphere.Parent = self.Model
 	floor.Parent = self.Model
 	floor2.Parent = self.Model
@@ -123,36 +124,10 @@ function create(self, controller)
 end
 
 function init(self)
-	self._maid:Mark(self.FloorDetector.Touched:Connect(function(hit)
-		if not hit:IsDescendantOf(self.Controller.Character) and hit.CanCollide then
-			self._floorTouchingParts[hit] = true
-		end
-	end))
-
-	self._maid:Mark(self.FloorDetector.TouchEnded:Connect(function(hit)
-		if self._floorTouchingParts[hit] then
-			self._floorTouchingParts[hit] = nil
-		end
-	end))
-
-	self._maid:Mark(self.JumpDetector.Touched:Connect(function(hit)
-		if not hit:IsDescendantOf(self.Controller.Character) and hit.CanCollide then
-			self._jumpTouchingParts[hit] = true
-		end
-	end))
-
-	self._maid:Mark(self.JumpDetector.TouchEnded:Connect(function(hit)
-		if self._jumpTouchingParts[hit] then
-			self._jumpTouchingParts[hit] = nil
-		end
-	end))
-
 	self._maid:Mark(self.Model)
 	self._maid:Mark(self.VForce)
 	self._maid:Mark(self.FloorDetector)
-	self._maid:Mark(self.JumpDetector)
 	self._maid:Mark(self.Gyro)
-
 	self.Model.Name = "Collider"
 	self.Model.Parent = self.Controller.Character
 end
@@ -165,8 +140,12 @@ function ColliderClass:Update(force, cframe)
 end
 
 function ColliderClass:IsGrounded(isJumpCheck)
-	-- using next on an empty dictionary will return nil
-	return not not next(isJumpCheck and self._jumpTouchingParts or self._floorTouchingParts)
+	local parts = (isJumpCheck and self.JumpDetector or self.FloorDetector):GetTouchingParts()
+	for _, part in pairs(parts) do
+		if not part:IsDescendantOf(self.Controller.Character) and part.CanCollide then
+			return true
+		end
+	end
 end
 
 function ColliderClass:GetStandingPart()
