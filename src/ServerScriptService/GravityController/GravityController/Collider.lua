@@ -122,12 +122,6 @@ function create(self, controller)
 end
 
 function init(self)
-	self._maid:Mark(self.Model)
-	self._maid:Mark(self.VForce)
-	self._maid:Mark(self.FloorDetector)
-	self._maid:Mark(self.JumpDetector)
-	self._maid:Mark(self.Gyro)
-
 	self._maid:Mark(self.FloorDetector.Touched:Connect(function(part)
 		if not part:IsDescendantOf(self.Controller.Character) and part.CanCollide then
 			table.insert(self._floorTouchingParts, part)
@@ -136,7 +130,7 @@ function init(self)
 	self._maid:Mark(self.FloorDetector.TouchEnded:Connect(function(part)
 		if not part:IsDescendantOf(self.Controller.Character) and part.CanCollide then
 			spawn(function()
-				wait(0.15)	-- slight delay before removing from cache
+				wait(0.01)	-- slight delay before removing from cache
 				if not self._floorTouchingParts then
 					return;
 				end
@@ -145,11 +139,17 @@ function init(self)
 						table.remove(self._floorTouchingParts, index)
 						return;
 					end
-				end
+				end 
 			end)
 		end
 	end))
 	self._maid:Mark(self.JumpDetector.Touched:Connect(function() end))
+
+	self._maid:Mark(self.Model)
+	self._maid:Mark(self.VForce)
+	self._maid:Mark(self.FloorDetector)
+	self._maid:Mark(self.JumpDetector)
+	self._maid:Mark(self.Gyro)
 
 	self.Model.Name = "Collider"
 	self.Model.Parent = self.Controller.Character
