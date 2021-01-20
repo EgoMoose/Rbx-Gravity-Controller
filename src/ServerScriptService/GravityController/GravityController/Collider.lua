@@ -125,6 +125,7 @@ function init(self)
 	self._maid:Mark(self.Model)
 	self._maid:Mark(self.VForce)
 	self._maid:Mark(self.FloorDetector)
+	self._maid:Mark(self.JumpDetector)
 	self._maid:Mark(self.Gyro)
 
 	self._maid:Mark(self.FloorDetector.Touched:Connect(function(part)
