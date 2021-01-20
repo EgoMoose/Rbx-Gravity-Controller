@@ -127,22 +127,26 @@ function init(self)
 	self._maid:Mark(self.FloorDetector)
 	self._maid:Mark(self.Gyro)
 
-	self._maid:Mark(self.FloorDetector.Touched:Connect(function(otherPart)
-		table.insert(self._floorTouchingParts, otherPart)
+	self._maid:Mark(self.FloorDetector.Touched:Connect(function(part)
+		if not part:IsDescendantOf(self.Controller.Character) and part.CanCollide then
+			table.insert(self._floorTouchingParts, part)
+		end
 	end))
-	self._maid:Mark(self.FloorDetector.TouchEnded:Connect(function(otherPart)
-		spawn(function()
-			wait(0.1)	-- slight delay before removing from cache
-			if not self._floorTouchingParts then
-				return;
-			end
-			for index, value in pairs(self._floorTouchingParts) do
-				if value == otherPart then
-					table.remove(self._floorTouchingParts, index)
+	self._maid:Mark(self.FloorDetector.TouchEnded:Connect(function(part)
+		if not part:IsDescendantOf(self.Controller.Character) and part.CanCollide then
+			spawn(function()
+				wait(0.15)	-- slight delay before removing from cache
+				if not self._floorTouchingParts then
 					return;
 				end
-			end
-		end)
+				for index, value in pairs(self._floorTouchingParts) do
+					if value == part then
+						table.remove(self._floorTouchingParts, index)
+						return;
+					end
+				end
+			end)
+		end
 	end))
 	self._maid:Mark(self.JumpDetector.Touched:Connect(function() end))
 
@@ -158,11 +162,15 @@ function ColliderClass:Update(force, cframe)
 end
 
 function ColliderClass:IsGrounded(isJumpCheck)
-	local parts = isJumpCheck and self.JumpDetector:GetTouchingParts() or self._floorTouchingParts
-	for _, part in pairs(parts) do
-		if not part:IsDescendantOf(self.Controller.Character) and part.CanCollide then
-			return true
+	if isJumpCheck then
+		local parts = self.JumpDetector:GetTouchingParts()
+		for _, part in pairs(parts) do
+			if not part:IsDescendantOf(self.Controller.Character) and part.CanCollide then
+				return true
+			end
 		end
+	else
+		return #self._floorTouchingParts > 0
 	end
 end
 
