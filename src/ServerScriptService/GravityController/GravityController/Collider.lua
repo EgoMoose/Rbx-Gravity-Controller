@@ -115,9 +115,6 @@ function create(self, controller)
 	gyro.CFrame = controller.HRP.CFrame
 	gyro.Parent = controller.HRP
 
-	floor.Touched:Connect(function() end)
-	floor2.Touched:Connect(function() end)
-
 	sphere.Parent = self.Model
 	floor.Parent = self.Model
 	floor2.Parent = self.Model

@@ -159,8 +159,6 @@ local function onGravityStep(self, dt)
 	local charRotation = newCharRotation * newCharCF
 	local isGrounded = self._collider:IsGrounded(false)
 
-	print(isGrounded)
-
 	self.StateTracker:Update(self._gravityUp, isGrounded, isInputMoving)
 	self._collider:Update(walkForce + gForce, charRotation)
 end
