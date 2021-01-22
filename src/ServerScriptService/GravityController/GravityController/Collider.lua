@@ -130,6 +130,7 @@ function init(self)
 	end))
 
 	self._maid:Mark(self.FloorDetector.TouchEnded:Connect(function(hit)
+		wait();
 		if self._floorTouchingParts[hit] then
 			self._floorTouchingParts[hit] = nil
 		end
@@ -142,6 +143,7 @@ function init(self)
 	end))
 
 	self._maid:Mark(self.JumpDetector.TouchEnded:Connect(function(hit)
+		wait();
 		if self._jumpTouchingParts[hit] then
 			self._jumpTouchingParts[hit] = nil
 		end
