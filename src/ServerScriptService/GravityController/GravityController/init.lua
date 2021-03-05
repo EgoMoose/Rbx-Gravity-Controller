@@ -129,7 +129,9 @@ local function onGravityStep(self, dt)
 	local newCharRotation = CFrame.new()
 	local newCharCF = CFrame.fromMatrix(ZERO3, charRight, newGravity, -charForward)
 
-	if isInputMoving then
+	if self._camera.CameraModule:IsCamRelative() then
+		newCharCF = CFrame.fromMatrix(ZERO3, -left, newGravity)
+	elseif isInputMoving then
 		newCharRotation = newCharRotation:Lerp(getRotationBetween(
 			charForward,
 			worldMove,
