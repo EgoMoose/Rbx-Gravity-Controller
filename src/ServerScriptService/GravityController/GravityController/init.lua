@@ -65,7 +65,7 @@ end
 local function getModelMass(model)
 	local mass = 0
 	for _, part in pairs(model:GetDescendants()) do
-		if part:IsA("BasePart") then
+		if part:IsA("BasePart") and not part.Massless then
 			mass = mass + part:GetMass()
 		end
 	end
