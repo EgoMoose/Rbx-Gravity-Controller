@@ -41,8 +41,7 @@ local CameraModule = PlayerModule:WaitForChild("CameraModule")
 local UserSettings = require(script:WaitForChild("FakeUserSettings"))
 local UserGameSettings = UserSettings():GetService("UserGameSettings")
 
-local FFlagUserCameraToggle = UserSettings():SafeIsUserFeatureEnabled("UserCameraToggle")
-local FFlagUserCameraInputRefactor = UserSettings():SafeIsUserFeatureEnabled("UserCameraInputRefactor3")
+local FFlagUserFlagEnableNewVRSystem = UserSettings():SafeIsUserFeatureEnabled("UserFlagEnableNewVRSystem")
 
 -- Camera variables
 
@@ -184,44 +183,42 @@ end
 
 function Camera:Update(dt)
 	if self.activeCameraController then
-		if FFlagUserCameraToggle then
-			self.activeCameraController:UpdateMouseBehavior()
-		end
+		self.activeCameraController:UpdateMouseBehavior()
 
 		local newCameraCFrame, newCameraFocus = self.activeCameraController:Update(dt)
 		newCameraFocus = CFrame.new(newCameraFocus.p) -- vehicle camera fix
-		self.activeCameraController:ApplyVRTransform()
-
-		calculateUpCFrame(self)
+		
+		if not FFlagUserFlagEnableNewVRSystem then
+			self.activeCameraController:ApplyVRTransform()
+		end
+		
+		calculateUpCFrame(self, dt)
 		calculateSpinCFrame(self)
-
+		
 		local lockOffset = Vector3.new(0, 0, 0)
 		if self.activeMouseLockController and self.activeMouseLockController:GetIsMouseLocked() then
 			lockOffset = self.activeMouseLockController:GetMouseLockOffset()
 		end
-
+		
 		local offset = newCameraFocus:ToObjectSpace(newCameraCFrame)
 		local camRotation = upCFrame * twistCFrame * offset
 		newCameraFocus = newCameraFocus - newCameraCFrame:VectorToWorldSpace(lockOffset) + camRotation:VectorToWorldSpace(lockOffset)
 		newCameraCFrame = newCameraFocus * camRotation
-
-		if self.activeCameraController.lastCameraTransform then
-			self.activeCameraController.lastCameraTransform = newCameraCFrame
-			self.activeCameraController.lastCameraFocus = newCameraFocus
-		end
-
+		
 		if self.activeOcclusionModule then
 			newCameraCFrame, newCameraFocus = self.activeOcclusionModule:Update(dt, newCameraCFrame, newCameraFocus)
 		end
 
-		workspace.CurrentCamera.CFrame = newCameraCFrame
-		workspace.CurrentCamera.Focus = newCameraFocus
+		-- Here is where the new CFrame and Focus are set for this render frame
+		game.Workspace.CurrentCamera.CFrame = newCameraCFrame
+		game.Workspace.CurrentCamera.Focus = newCameraFocus
 
+		-- Update to character local transparency as needed based on camera-to-subject distance
 		if self.activeTransparencyController then
 			self.activeTransparencyController:Update()
 		end
 
-		if FFlagUserCameraInputRefactor and CameraInput.getInputEnabled() then
+		if CameraInput.getInputEnabled() then
 			CameraInput.resetInputForFrameEnd()
 		end
 	end
