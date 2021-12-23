@@ -10,6 +10,9 @@ params.FilterDescendantsInstances = {}
 params.FilterType = Enum.RaycastFilterType.Blacklist
 
 local gravityController = nil
+local player = Players.LocalPlayer
+local isEquipped = false
+local isSeated = false
 
 local function getGravityUp(self, oldGravity)
 	local result = workspace:Raycast(self.HRP.Position, -5*oldGravity, params)
@@ -19,8 +22,8 @@ local function getGravityUp(self, oldGravity)
 	return oldGravity
 end
 
-tool.Equipped:Connect(function()
-	gravityController = GravityControllerClass.new(Players.LocalPlayer)
+local function enableGravityController()
+	gravityController = GravityControllerClass.new(player)
 	gravityController.GetGravityUp = getGravityUp
 	gravityController.Maid:Mark(RunService.Heartbeat:Connect(function(dt)
 		local height = gravityController:GetFallHeight()
@@ -30,10 +33,33 @@ tool.Equipped:Connect(function()
 	end))
 
 	params.FilterDescendantsInstances = {gravityController.Character}
-end)
+end
 
-tool.Unequipped:Connect(function()
+local function disableGravityController()
 	if gravityController then
 		gravityController:Destroy()
+	end
+end
+
+tool.Equipped:Connect(function()
+	isEquipped = true
+	if (not isSeated) then
+		enableGravityController()
+	end
+end)
+tool.Unequipped:Connect(function()
+	isEquipped = false
+	disableGravityController()
+end)
+
+local character = player.Character or player.CharacterAdded:Wait()
+local Humanoid = character:WaitForChild("Humanoid")
+
+Humanoid.Seated:Connect(function(seated)
+	isSeated = seated
+	if seated then
+		disableGravityController()
+	elseif isEquipped then
+		enableGravityController()
 	end
 end)
