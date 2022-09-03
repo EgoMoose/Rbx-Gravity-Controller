@@ -188,9 +188,8 @@ function Camera:Update(dt)
 		local newCameraCFrame, newCameraFocus = self.activeCameraController:Update(dt)
 		newCameraFocus = CFrame.new(newCameraFocus.p) -- vehicle camera fix
 		
-		if not FFlagUserFlagEnableNewVRSystem then
-			self.activeCameraController:ApplyVRTransform()
-		end
+
+		--self.activeCameraController:ApplyVRTransform()
 		
 		calculateUpCFrame(self, dt)
 		calculateSpinCFrame(self)
@@ -210,12 +209,13 @@ function Camera:Update(dt)
 		end
 
 		-- Here is where the new CFrame and Focus are set for this render frame
-		game.Workspace.CurrentCamera.CFrame = newCameraCFrame
-		game.Workspace.CurrentCamera.Focus = newCameraFocus
+		local currentCamera = game.Workspace.CurrentCamera :: Camera
+		currentCamera.CFrame = newCameraCFrame
+		currentCamera.Focus = newCameraFocus
 
 		-- Update to character local transparency as needed based on camera-to-subject distance
 		if self.activeTransparencyController then
-			self.activeTransparencyController:Update()
+			self.activeTransparencyController:Update(dt)
 		end
 
 		if CameraInput.getInputEnabled() then
